@@ -1,93 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, Moon, Trash2, Play, Lock, Trophy, Coins, Briefcase, ShoppingBag, Utensils, X, Star, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Heart, Sparkles, Moon, Trash2, Play, Lock, Trophy, Coins, Briefcase, ShoppingBag, Utensils, X, Star, AlertTriangle } from 'lucide-react';
 
-// --- DIE GROSSE TEXT-DATENBANK (FRECHE PERSÖNLICHKEIT) ---
+// --- DATENBANK FÜR TEXTE & KOSTÜME ---
 const QUOTES = {
-  pet: [
-    "Hey! Nicht die Frisur ruinieren!", "Mmh, okay, das ist akzeptabel... für diesmal.", "Ich bin kein Streichelzoo, Kumpel!", "Hach, mein Fell ist einfach göttlich, oder?", "Okay, 10 Sekunden sind um. Verdufte!", "Nur weil ich süß aussehe, heißt das nicht, dass du mich anfassen darfst!"
-  ],
-  feed: [
-    "Thomai hat sich selbst übertroffen! Köstlich!", "Boah, Thomai kocht wie ein Gott! Sag ihm das!", "Endlich! Ich dachte schon, ich verhungere hier!", "Mehr davon! Und sag Thomai, die Würze war perfekt!", "Thomai ist mein Lieblingskoch. Du bist nur der Kellner.", "Nom nom... Thomai for President!"
-  ],
-  fat: [
-    "Mäste mich nicht! Ich pass schon kaum in meine Rüstung!", "Willst du, dass ich rolle statt laufe? Hör auf!", "Ich bin satt! Geh weg mit dem Zeug!", "Denkst du, ich bin ein Fass ohne Boden? Nerv nicht!"
-  ],
-  workStart: [
-    "Ab in den Hamsterknast... äh, ins Büro.", "Ich geh Karriere machen. Stör mich bloß nicht!", "Zeit ist Geld, und ich hab beides nicht. Bis dann!", "Ich schufte, du chillst? Ungerecht!", "Wenn ich reich bin, kauf ich mir einen eigenen Menschen."
-  ],
-  workCancel: [
-    "Früh Feierabend? Du bist ja noch fauler als ich!", "Karriere abgebrochen. Zurück zum Nichtstun!", "Tja, wer nicht arbeitet, bekommt auch kein Gold. Logisch, oder?"
-  ],
-  clean: [
-    "Endlich! Hier hat's gestunken wie in 'nem Pumakäfig.", "Sauberkeit ist eine Zier, doch weiter kommt man ohne ihr... oh, danke.", "Glänze wieder wie ein Neuwagen! Polier gefälligst ordentlich!"
-  ]
+  pet: ["Hey! Nicht die Frisur ruinieren!", "Mmh, okay, akzeptabel.", "Ich bin kein Streichelzoo!", "Mein Fell ist göttlich, oder?", "Okay, Pfoten weg jetzt!", "Nur gucken, nicht anfassen!"],
+  petCooldown: ["Finger weg! Ich hab Feierabend!", "Erschreck mich nicht so!", "Ich bin gerade nicht in Kuschellaune!", "Geh jemanden anderen nerven!"],
+  feed: ["Thomai hat sich selbst übertroffen!", "Boah, Thomai kocht wie ein Gott!", "Endlich! Thomai weiß, was ich brauche!", "Nom nom... Thomai for President!", "Thomai ist ein Genie an der Pfanne!", "Sag Thomai, das war 5-Sterne-Niveau!"],
+  fat: ["Willst du mich mästen? Ich pass kaum noch in die Rüstung!", "Stopp! Ich rolle sonst bald durchs Zimmer!", "Ich bin satt! Geh weg mit dem Zeug!", "Hör auf! Thomai kocht zu gut, ich kann nicht aufhören!"],
+  workStart: ["Ab ins Büro... argh.", "Karriere ruft! Stör mich bloß nicht!", "Zeit ist Gold. Bis in 30 Min!", "Ich schufte, du chillst? Ungerecht!"],
+  workCancel: ["Früh Feierabend? Faulpelz!", "Karriere abgebrochen. Zurück zum Sofa.", "Tja, wer nicht arbeitet, bleibt arm."],
+  clean: ["Endlich! Hier hat's gestunken wie im Pumakäfig.", "Glänze wieder wie ein Neuwagen!", "Sauberkeit ist eine Zier... danke!"],
+  game: ["KERN-ZEIT! Schnapp sie dir!", "Ich hab Hunger auf Kerne! Los!", "Zeig was du kannst!"]
 };
 
-// --- KOSTÜM-DEFINITIONEN ---
 const COSTUMES = [
-  { id: 'default', name: 'Hami Pur', price: 0, unlockLevel: 1, color: '#FFA857' },
-  { id: 'knight', name: 'Ritter', price: 0, unlockLevel: 2, color: '#90A4AE' },
-  { id: 'angel', name: 'Engel', price: 100, unlockLevel: 0, color: '#E3F2FD' },
-  { id: 'devil', name: 'Teufel', price: 100, unlockLevel: 0, color: '#B71C1C' },
-  { id: 'wizard', name: 'Zauberer', price: 0, unlockLevel: 5, color: '#4527A0' },
-  { id: 'gnome', name: 'Gnom', price: 0, unlockLevel: 3, color: '#2D5A27' },
-  { id: 'chef', name: 'Chefkoch', price: 100, unlockLevel: 0, color: '#FFFFFF' },
-  { id: 'pirate', name: 'Pirat', price: 0, unlockLevel: 7, color: '#3E2723' },
-  { id: 'king', name: 'König', price: 150, unlockLevel: 0, color: '#FFD700' },
-  { id: 'astronaut', name: 'Astronaut', price: 200, unlockLevel: 0, color: '#CFD8DC' }
+  { id: 'default', name: 'Hami Pur', price: 0, lvl: 1, color: '#FFA857' },
+  { id: 'gnome', name: 'Gnom', price: 0, lvl: 2, color: '#2D5A27' },
+  { id: 'knight', name: 'Ritter', price: 0, lvl: 3, color: '#90A4AE' },
+  { id: 'santa', name: 'Weihnachten', price: 0, lvl: 4, color: '#D32F2F' },
+  { id: 'wizard', name: 'Zauberer', price: 0, lvl: 5, color: '#4527A0' },
+  { id: 'angel', name: 'Engel', price: 100, lvl: 0, color: '#E3F2FD' },
+  { id: 'devil', name: 'Teufel', price: 100, lvl: 0, color: '#B71C1C' },
+  { id: 'pirate', name: 'Pirat', price: 100, lvl: 0, color: '#3E2723' },
+  { id: 'astronaut', name: 'Astronaut', price: 150, lvl: 0, color: '#CFD8DC' },
+  { id: 'chef', name: 'Chefkoch', price: 100, lvl: 0, color: '#FFFFFF' }
 ];
 
-// --- GRAFIK-KOMPONENTE: DER AUFWENDIGE HAMI ---
-const HamiRender = ({ id, isWorking }: { id: string, isWorking: boolean }) => {
+// --- HAMI GRAFIK ENGINE ---
+const HamiRender = ({ id, isWorking, isEating }: any) => {
+  const c = COSTUMES.find(x => x.id === id) || COSTUMES[0];
   return (
-    <motion.div 
-      className="relative" 
-      animate={isWorking ? { x: [-10, 10, -10], rotate: [-2, 2, -2] } : { y: [0, -8, 0] }} 
-      transition={{ repeat: Infinity, duration: 2 }}
-    >
-      <svg width="220" height="220" viewBox="0 0 200 200">
-        {/* Hinter dem Körper: Flügel für Engel */}
-        {id === 'angel' && (
-          <g fill="white" opacity="0.8">
-            <path d="M 40 100 C 0 60, 20 20, 60 50 Z" />
-            <path d="M 160 100 C 200 60, 180 20, 140 50 Z" />
-          </g>
-        )}
-
+    <motion.div animate={isWorking ? { x: [-5, 5, -5], rotate: [-1, 1, -1] } : { y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 2.5 }}>
+      <svg width="220" height="220" viewBox="0 0 200 200" className="drop-shadow-2xl">
+        {/* Spezial-Hintergrund für Engel */}
+        {id === 'angel' && <motion.g animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ repeat: Infinity, duration: 2 }} fill="white"><path d="M40 100 Q10 40 50 60 Z" /><path d="M160 100 Q190 40 150 60 Z" /></motion.g>}
+        
         {/* Körper-Basis */}
-        <ellipse cx="100" cy="115" rx="70" ry="65" fill="#FFFFFF" stroke="#E8D5B5" strokeWidth="3" />
-        <path d="M 45 105 Q 100 45, 155 105" fill={COSTUMES.find(c=>c.id===id)?.color || '#FFA857'} />
+        <circle cx="65" cy="55" r="18" fill={c.color} stroke="#E8D5B5" strokeWidth="2" />
+        <circle cx="135" cy="55" r="18" fill={c.color} stroke="#E8D5B5" strokeWidth="2" />
+        <ellipse cx="100" cy="115" rx="75" ry="70" fill="#FFFFFF" stroke="#E8D5B5" strokeWidth="3" />
+        <path d="M 40 100 Q 100 40, 160 100" fill={c.color} opacity="0.9" />
 
-        {/* KOSTÜM-DETAILS */}
-        {id === 'knight' && (
-          <g>
-            <rect x="55" y="45" width="90" height="50" rx="10" fill="#B0BEC5" />
-            <rect x="65" y="65" width="70" height="5" fill="#546E7A" />
-            <path d="M 100 20 L 110 45 L 90 45 Z" fill="red" />
-          </g>
-        )}
+        {/* KOSTÜM LAYER */}
+        {id === 'knight' && <g><rect x="55" y="45" width="90" height="50" rx="10" fill="#B0BEC5" /><rect x="65" y="65" width="70" height="4" fill="#546E7A" /><path d="M100 20 L110 45 L90 45 Z" fill="red" /></g>}
+        {id === 'gnome' && <g><path d="M55 65 L100 0 L145 65 Z" fill="#1B5E20" /><path d="M70 115 Q100 170, 130 115 Z" fill="white" /></g>}
         {id === 'angel' && <ellipse cx="100" cy="35" rx="30" ry="8" fill="none" stroke="#FFD700" strokeWidth="4" />}
-        {id === 'devil' && <g fill="#B71C1C"><path d="M 60 60 L 50 30 L 80 55 Z" /><path d="M 140 60 L 150 30 L 120 55 Z" /></g>}
-        {id === 'wizard' && <g><path d="M 50 65 L 100 -10 L 150 65 Z" fill="#311B92" /><circle cx="100" cy="20" r="3" fill="yellow" /></g>}
-        {id === 'gnome' && <g><path d="M 55 65 L 100 0 L 145 65 Z" fill="#1B5E20" /><path d="M 70 115 Q 100 170, 130 115 Z" fill="white" /></g>}
+        {id === 'devil' && <g fill="#B71C1C"><path d="M60 60 L50 30 L80 55 Z" /><path d="M140 60 L150 30 L120 55 Z" /></g>}
+        {id === 'wizard' && <g><path d="M50 65 L100 -10 L150 65 Z" fill="#311B92" /><circle cx="100" cy="20" r="3" fill="yellow" /></g>}
         {id === 'chef' && <rect x="75" y="10" width="50" height="55" rx="10" fill="white" stroke="#DDD" />}
-        {id === 'king' && <path d="M 65 55 L 75 30 L 100 50 L 125 30 L 135 55 Z" fill="#FFD700" stroke="#B8860B" />}
-        {id === 'pirate' && <g><path d="M 50 65 L 150 65 Q 100 20, 50 65" fill="black" /><circle cx="75" cy="90" r="12" fill="black" /></g>}
-        {id === 'astronaut' && <circle cx="100" cy="90" r="60" fill="rgba(173, 216, 230, 0.3)" stroke="white" strokeWidth="4" />}
+        {id === 'pirate' && <g><path d="M50 65 L150 65 Q100 20, 50 65" fill="black" /><circle cx="75" cy="90" r="12" fill="black" /></g>}
+        {id === 'astronaut' && <circle cx="100" cy="90" r="65" fill="rgba(173,216,230,0.2)" stroke="white" strokeWidth="3" />}
 
         {/* Gesicht */}
-        <circle cx="75" cy="90" r="9" fill="#1a1a1a" />
-        <circle cx="125" cy="90" r="9" fill="#1a1a1a" />
-        <circle cx="78" cy="87" r="3" fill="white" />
-        <circle cx="100" cy="105" r="5" fill="#FF80AB" />
-        <path d="M 90 115 Q 100 122, 110 115" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="75" cy="95" r="9" fill="#1a1a1a" />
+        <circle cx="125" cy="95" r="9" fill="#1a1a1a" />
+        <circle cx="78" cy="92" r="3" fill="white" />
+        <circle cx="100" cy="110" r="5" fill="#FF80AB" />
+        <path d="M 90 120 Q 100 128, 110 120" fill="none" stroke="#333" strokeWidth="2.5" strokeLinecap="round" />
 
-        {/* Arbeits-Accessoire */}
+        {/* Arbeit-Animation */}
         {isWorking && (
-          <g transform="translate(150, 130)">
+          <g transform="translate(150, 140)">
             <rect width="35" height="25" fill="#5D4037" rx="3" />
-            <path d="M 10 0 L 10 -8 L 25 -8 L 25 0" fill="none" stroke="#5D4037" strokeWidth="2" />
+            <path d="M 10 0 L 10 -8 L 25 -8 L 25 0" fill="none" stroke="#5D4037" strokeWidth="3" />
+            <rect x="-100" y="-120" width="40" height="20" fill="black" rx="2" />
           </g>
         )}
       </svg>
@@ -99,132 +76,93 @@ export default function App() {
   const [xp, setXp] = useState(() => Number(localStorage.getItem('h_xp')) || 0);
   const [coins, setCoins] = useState(() => Number(localStorage.getItem('h_coins')) || 0);
   const [hunger, setHunger] = useState(100);
-  const [cleanliness, setCleanliness] = useState(100);
   const [poops, setPoops] = useState<{id: number, x: number, y: number}[]>([]);
   const [currentId, setCurrentId] = useState('default');
   const [unlocked, setUnlocked] = useState(['default']);
   const [isWorking, setIsWorking] = useState(false);
   const [workLeft, setWorkLeft] = useState(0);
-  const [message, setMessage] = useState("Na, was willst du schon wieder?");
+  const [message, setMessage] = useState("Was willst du?");
+  const [lastPet, setLastPet] = useState(0);
+  const [gameActive, setGameActive] = useState(false);
+  const [gameScore, setGameScore] = useState(0);
+  const [seeds, setSeeds] = useState<{id: number, x: number}[]>([]);
+  const [lastGame, setLastGame] = useState(() => Number(localStorage.getItem('h_game')) || 0);
 
   const level = Math.floor(xp / 100) + 1;
 
-  // Persistence
   useEffect(() => {
     localStorage.setItem('h_xp', xp.toString());
     localStorage.setItem('h_coins', coins.toString());
-  }, [xp, coins]);
+    localStorage.setItem('h_game', lastGame.toString());
+  }, [xp, coins, lastGame]);
 
-  // Game Loop
   useEffect(() => {
     const loop = setInterval(() => {
       setHunger(p => Math.max(0, p - 0.015));
-      if (Math.random() < 0.005 && poops.length < 5) {
-        setPoops(p => [...p, { id: Date.now(), x: Math.random() * 60 + 20, y: Math.random() * 50 + 30 }]);
-      }
+      if (Math.random() < 0.005 && poops.length < 5) setPoops(p => [...p, { id: Date.now(), x: Math.random() * 60 + 20, y: Math.random() * 50 + 30 }]);
       if (isWorking && workLeft > 0) setWorkLeft(t => t - 1);
-      else if (isWorking && workLeft === 0) {
-        setIsWorking(false);
-        setCoins(c => c + 50);
-        setXp(x => x + 50);
-        say(QUOTES.feed[0]); // Zufälliger Lob-Satz
-      }
+      else if (isWorking) { setIsWorking(false); setCoins(c => c + 50); setXp(x => x + 50); say(QUOTES.feed); }
     }, 1000);
     return () => clearInterval(loop);
   }, [isWorking, workLeft, poops.length]);
 
-  const say = (arr: string[]) => {
-    const text = arr[Math.floor(Math.random() * arr.length)];
-    setMessage(text);
-    setTimeout(() => setMessage(""), 4000);
+  const say = (arr: string[]) => { setMessage(arr[Math.floor(Math.random() * arr.length)]); setTimeout(() => setMessage(""), 3500); };
+
+  const handleCheat1 = () => { if(prompt("Code?") === "6212") { setCoins(c => c + 10000); setXp(x => x + 1000); say(["BAM! Reich!"]); }};
+  const handleCheat2 = () => { if(prompt("Code?") === "6212") { setHunger(h => h / 2); setPoops(p => [...p, {id:1, x:30, y:40},{id:2, x:50, y:60},{id:3, x:70, y:50}]); say(["Ugh... mein Bauch..."]); }};
+
+  const startGame = () => {
+    if (Date.now() - lastGame < 3600000) return say(["Ich bin müde! In einer Stunde wieder."]);
+    setGameActive(true); setGameScore(0); setSeeds([]); setLastGame(Date.now()); say(QUOTES.game);
   };
 
-  // CHEATS
-  const handleCheat1 = () => {
-    const pw = prompt("Admin Key?");
-    if (pw === "6212") {
-      setCoins(c => c + 10000);
-      setXp(x => x + 1000);
-      setMessage("Zack! Reich und schlau!");
-    }
-  };
-
-  const handleCheat2 = () => {
-    const pw = prompt("Admin Key?");
-    if (pw === "6212") {
-      setHunger(h => Math.max(0, h - 50));
-      const newPoops = [
-        { id: Date.now(), x: 30, y: 40 },
-        { id: Date.now()+1, x: 50, y: 60 },
-        { id: Date.now()+2, x: 70, y: 50 }
-      ];
-      setPoops(p => [...p, ...newPoops]);
-      setMessage("Ugh... was hast du mir ins Essen gemischt? 💩");
-    }
-  };
-
-  const cancelWork = () => {
-    const confirm = window.confirm("Willst du wirklich abbrechen? Du bekommst KEIN Gold und KEINE XP!");
-    if (confirm) {
-      setIsWorking(false);
-      setWorkLeft(0);
-      say(QUOTES.workCancel);
-    }
-  };
+  useEffect(() => {
+    if (!gameActive) return;
+    const end = setTimeout(() => setGameActive(false), 20000);
+    const spawn = setInterval(() => setSeeds(s => [...s, { id: Date.now(), x: Math.random() * 80 + 10 }]), 600);
+    return () => { clearTimeout(end); clearInterval(spawn); };
+  }, [gameActive]);
 
   return (
-    <div className="min-h-screen bg-[#FFF9F2] p-4 font-sans select-none overflow-hidden">
+    <div className="min-h-screen bg-[#FFF9F2] p-4 font-sans select-none overflow-hidden flex flex-col items-center">
       
-      {/* CHEAT BUTTONS */}
-      <div onClick={handleCheat2} className="fixed top-2 left-2 w-8 h-8 opacity-0 hover:opacity-10 cursor-pointer bg-black rounded" />
-      <div onClick={handleCheat1} className="fixed top-2 right-2 w-8 h-8 opacity-0 hover:opacity-10 cursor-pointer bg-black rounded" />
+      {/* CHEAT BUTTONS (Unsichtbar in den Ecken) */}
+      <div onClick={handleCheat2} className="fixed top-0 left-0 w-16 h-16 z-[100] cursor-pointer" />
+      <div onClick={handleCheat1} className="fixed top-0 right-0 w-16 h-16 z-[100] cursor-pointer" />
 
-      {/* HEADER */}
-      <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-3xl shadow-xl border-4 border-white flex flex-col items-center">
+      {/* HEADER (DEIN LAYOUT) */}
+      <div className="w-full max-w-4xl grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-[2rem] shadow-xl border-4 border-white flex flex-col items-center">
           <Trophy className="text-orange-400 mb-1" />
-          <span className="text-2xl font-black">LVL {level}</span>
-          <div className="w-full h-2 bg-slate-100 rounded-full mt-2 overflow-hidden border">
-            <motion.div animate={{ width: `${xp % 100}%` }} className="h-full bg-orange-400" />
-          </div>
+          <span className="text-2xl font-black italic">LVL {level}</span>
+          <div className="w-full h-2 bg-slate-100 rounded-full mt-2 overflow-hidden border"><motion.div animate={{ width: `${xp % 100}%` }} className="h-full bg-orange-400" /></div>
         </div>
-        <div className="bg-white p-4 rounded-3xl shadow-xl border-4 border-white flex flex-col items-center">
+        <div className="bg-white p-4 rounded-[2rem] shadow-xl border-4 border-white flex flex-col items-center">
           <Coins className="text-amber-500 mb-1" />
-          <span className="text-2xl font-black">{coins}</span>
+          <span className="text-2xl font-black italic">{coins}</span>
         </div>
-        <div className="bg-white p-4 rounded-3xl shadow-xl border-4 border-white hidden md:flex flex-col items-center">
-          <ShieldCheck className="text-sky-500 mb-1" />
-          <span className="text-sm font-black uppercase">Premium Hami</span>
+        <div className="bg-white p-4 rounded-[2rem] shadow-xl border-4 border-white flex flex-col items-center">
+          <Utensils className="text-green-500 mb-1" />
+          <span className="text-2xl font-black italic">{Math.round(hunger)}%</span>
         </div>
       </div>
 
-      <main className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 items-center justify-center">
+      <main className="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-center justify-center">
         
-        {/* ROOM AREA */}
-        <div className="w-full md:w-2/3 aspect-square bg-white rounded-[4rem] shadow-2xl relative border-8 border-white overflow-hidden flex flex-col items-center justify-center bg-gradient-to-b from-orange-50 to-white">
-          
-          <AnimatePresence>
-            {message && (
-              <motion.div initial={{scale:0}} animate={{scale:1}} exit={{scale:0}} className="absolute top-10 z-50 bg-white p-4 rounded-2xl shadow-xl border-2 border-orange-100 font-bold max-w-[80%] text-center italic">
-                {message}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* ROOM */}
+        <div className="w-full md:w-2/3 aspect-square bg-white rounded-[4rem] shadow-2xl relative border-8 border-white overflow-hidden flex items-center justify-center bg-gradient-to-b from-orange-50 to-white">
+          <AnimatePresence>{message && <motion.div initial={{scale:0}} animate={{scale:1}} exit={{scale:0}} className="absolute top-10 z-50 bg-white p-4 rounded-2xl shadow-xl border-2 border-orange-100 font-bold max-w-[80%] text-center italic">{message}</motion.div>}</AnimatePresence>
 
           {isWorking ? (
-            <div className="text-center z-20">
+            <div className="text-center">
               <HamiRender id={currentId} isWorking={true} />
-              <p className="mt-4 font-black text-slate-400 animate-pulse">BIN SCHUFTEN... {Math.ceil(workLeft/60)}M</p>
-              <button onClick={cancelWork} className="mt-4 bg-red-100 text-red-600 px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-red-200 transition-all">
-                <AlertTriangle size={16}/> Früh Feierabend
-              </button>
+              <p className="mt-4 font-black text-slate-400 animate-pulse uppercase tracking-widest">Bin schuften... {Math.ceil(workLeft/60)}m</p>
+              <button onClick={() => {if(window.confirm("Abbrechen? Keine XP, kein Gold!")){setIsWorking(false); setWorkLeft(0); say(QUOTES.workCancel)}}} className="mt-4 bg-red-100 text-red-600 px-6 py-2 rounded-2xl font-black uppercase text-xs flex items-center gap-2 hover:bg-red-200"><AlertTriangle size={14}/> Abbruch</button>
             </div>
           ) : (
-            <div className="relative cursor-pointer" onClick={() => {setXp(x=>x+5); say(QUOTES.pet)}}>
+            <div className="relative cursor-pointer" onClick={() => {if(Date.now()-lastPet < 600000){say(QUOTES.petCooldown)} else {setLastPet(Date.now()); setXp(x=>x+20); say(QUOTES.pet)}}}>
               <HamiRender id={currentId} isWorking={false} />
-              {poops.map(p => (
-                <button key={p.id} onClick={(e) => {e.stopPropagation(); setPoops(o=>o.filter(x=>x.id!==p.id)); setXp(x=>x+20); say(QUOTES.clean)}} style={{left:`${p.x}%`, top:`${p.y}%`}} className="absolute text-4xl z-40">💩</button>
-              ))}
+              {poops.map(p => <button key={p.id} onClick={(e) => {e.stopPropagation(); setPoops(o=>o.filter(x=>x.id!==p.id)); setXp(x=>x+20); say(QUOTES.clean)}} style={{left:`${p.x}%`, top:`${p.y}%`}} className="absolute text-4xl z-40 transition-transform hover:scale-125">💩</button>)}
             </div>
           )}
         </div>
@@ -232,43 +170,45 @@ export default function App() {
         {/* SIDEBAR */}
         <div className="w-full md:w-1/3 space-y-4">
           <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border-4 border-white">
-            <h3 className="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Hami's Magen</h3>
-            <div className="grid grid-cols-5 gap-2">
-              {['🌻','🍝','🍕','🍟','🥗'].map((emoji, i) => (
-                <button key={i} onClick={() => { if(hunger<90){setHunger(h=>Math.min(100,h+20)); setXp(x=>x+10); say(QUOTES.feed);} else {say(QUOTES.fat);} }} className="text-3xl hover:scale-125 transition-transform p-2 bg-orange-50 rounded-xl">{emoji}</button>
+            <h3 className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest text-center italic">Schnell-Fütterung</h3>
+            <div className="flex justify-around">
+              {['🌻','🍝','🍕','🍟','🥗'].map((e, i) => (
+                <button key={i} onClick={() => {if(hunger<90){setHunger(h=>Math.min(100,h+20)); setXp(x=>x+15); say(QUOTES.feed)} else {say(QUOTES.fat)}}} className="text-3xl hover:scale-125 transition-transform">{e}</button>
               ))}
             </div>
           </div>
 
-          <button onClick={() => {
-            if(!isWorking) { setIsWorking(true); setWorkLeft(1800); say(QUOTES.workStart); }
-          }} className="w-full bg-sky-500 text-white p-6 rounded-[2.5rem] shadow-lg font-black flex items-center justify-center gap-4 hover:bg-sky-600 transition-all disabled:opacity-50" disabled={isWorking}>
-            <Briefcase /> {isWorking ? 'BIN BEI DER ARBEIT' : 'ARBEITEN GEHEN'}
-          </button>
+          <button onClick={() => {if(!isWorking){setIsWorking(true); setWorkLeft(1800); say(QUOTES.workStart)}}} className="w-full bg-sky-500 text-white p-6 rounded-[2.5rem] shadow-lg font-black flex items-center justify-center gap-4 hover:bg-sky-600 transition-all disabled:opacity-50" disabled={isWorking}><Briefcase /> ARBEITEN</button>
+          
+          <button onClick={startGame} className="w-full bg-rose-500 text-white p-6 rounded-[2.5rem] shadow-lg font-black flex items-center justify-center gap-4 hover:bg-rose-600 transition-all"><Play /> MINIGAME</button>
 
-          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border-4 border-white max-h-64 overflow-y-auto">
-            <h3 className="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2"><ShoppingBag size={14}/> Kostüme</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {COSTUMES.map(c => {
-                const isOwned = unlocked.includes(c.id) || (c.unlockLevel > 0 && level >= c.unlockLevel);
-                return (
-                  <button 
-                    key={c.id} 
-                    onClick={() => {
-                      if(isOwned) setCurrentId(c.id);
-                      else if(coins >= c.price) { setCoins(coins-c.price); setUnlocked([...unlocked, c.id]); setCurrentId(c.id); }
-                    }}
-                    className={`p-2 rounded-xl border-2 text-[10px] font-bold uppercase transition-all ${currentId === c.id ? 'border-orange-500 bg-orange-50' : 'border-slate-100 hover:border-orange-200'}`}
-                  >
-                    {c.name}
-                    {!isOwned && <div className="text-[8px] text-amber-600">{c.unlockLevel > 0 ? `LVL ${c.unlockLevel}` : `💰 ${c.price}`}</div>}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border-4 border-white max-h-60 overflow-y-auto">
+             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest flex items-center gap-2"><ShoppingBag size={14}/> Kleiderschrank</h3>
+             <div className="grid grid-cols-2 gap-2">
+                {COSTUMES.map(c => {
+                  const owned = unlocked.includes(c.id) || (c.lvl > 0 && level >= c.lvl);
+                  return (
+                    <button key={c.id} onClick={() => {if(owned){setCurrentId(c.id)} else if(coins >= c.price){setCoins(coins-c.price); setUnlocked([...unlocked, c.id]); setCurrentId(c.id)}}} className={`p-2 rounded-xl border-2 text-[10px] font-black uppercase ${currentId === c.id ? 'border-orange-500 bg-orange-50' : 'border-slate-50'}`}>
+                      {c.name} {!owned && <div className="text-[8px] text-amber-600">{c.lvl > 0 ? `LVL ${c.lvl}` : `💰 ${c.price}`}</div>}
+                    </button>
+                  );
+                })}
+             </div>
           </div>
         </div>
       </main>
+
+      {/* MINIGAME */}
+      <AnimatePresence>
+        {gameActive && (
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 bg-sky-400 z-[200] p-8 flex flex-col items-center">
+             <h2 className="text-5xl font-black text-white mb-4 italic">KERN-JAGD! ({gameScore}/40)</h2>
+             <div className="relative w-full h-full max-w-2xl bg-white/20 rounded-[3rem] overflow-hidden">
+               {seeds.map(s => <motion.div key={s.id} initial={{y:-100, x:`${s.x}%`}} animate={{y:800}} onClick={()=>{if(gameScore<40){setGameScore(s=>s+1); setXp(x=>x+1); setSeeds(o=>o.filter(x=>x.id!==s.id))}}} transition={{duration:2, ease:"linear"}} className="absolute text-5xl cursor-pointer">🌻</motion.div>)}
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
